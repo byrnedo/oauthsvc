@@ -32,7 +32,8 @@ func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request) {
 	defer resp.Close()
 
 	if ar := oC.Server.HandleAuthorizeRequest(resp, r); ar != nil {
-		if !HandleLoginPage(ar, w, r) {
+		if !doAuth(r) {
+			RenderLoginPage(ar,w,r)
 			return
 		}
 		ar.Authorized = true
@@ -70,11 +71,16 @@ func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HandleLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) bool {
+func doAuth(r *http.Request) bool {
 	r.ParseForm()
+	// talk to data source here.
 	if r.Method == "POST" && r.Form.Get("login") == "test" && r.Form.Get("password") == "test" {
 		return true
 	}
+	return false
+}
+
+func RenderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) bool {
 
 	w.Write([]byte("<html><body>"))
 

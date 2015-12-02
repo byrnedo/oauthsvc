@@ -2,7 +2,8 @@ package mq
 
 import (
 	r "github.com/byrnedo/apibase/routes"
-"github.com/apcera/nats"
+	"github.com/apcera/nats"
+	"github.com/RangelReale/osin"
 )
 
 
@@ -17,7 +18,7 @@ func (c *OauthController) GetRoutes() []*r.NatsRoute {
 	}
 }
 
-func NewOauthController(nc *nats.EncodedConn) (oC *OauthController) {
+func NewOauthController(nc *nats.EncodedConn, *osin.Storage) (oC *OauthController) {
 	oC = &OauthController{}
 	oC.encCon = nc
 	return
