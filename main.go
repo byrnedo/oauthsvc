@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"github.com/RangelReale/osin"
-	"github.com/RangelReale/osin/example"
 	"net/http"
 	"github.com/byrnedo/apibase"
 	"github.com/byrnedo/apibase/db/mongo"
@@ -14,6 +13,7 @@ import (
 	"time"
 	. "github.com/byrnedo/apibase/logger"
 	"github.com/byrnedo/oauthsvc/routers"
+	mgostore "github.com/nguyenxuantuong/osin-mongo-storage"
 )
 
 var (
@@ -24,17 +24,21 @@ func init() {
 
 	apibase.Init()
 
-	config := osin.NewServerConfig()
-	sstorage := example.NewTestStorage()
-	sstorage.SetClient("1234", &osin.DefaultClient{
-		Id:          "1234",
-		Secret:      "aabbccdd",
-		RedirectUri: "http://localhost:14001/appauth",
-	})
-	server = osin.NewServer(config, sstorage)
-
-
 	mongo.Init(env.GetOr("MONGO_URL", apibase.Conf.GetDefaultString("mongo.url", "")), Trace)
+
+	config := osin.NewServerConfig()
+	sstorage := mgostore.NewOAuthStorage(mongo.Conn(), "oauth_osin")
+
+	// MOVE THIS AND MAKE DYNAMIC
+	if _, err := sstorage.GetClient("1234"); err != nil {
+		sstorage.SetClient("1234", &osin.DefaultClient{
+			Id:          "1234",
+			Secret:      "superSecret!",
+			RedirectUri: "http://localhost:14001/appauth",
+		})
+	}
+
+	server = osin.NewServer(config, sstorage)
 
 	natsOpts := natsio.NewNatsOptions(func(n *natsio.NatsOptions) error {
 		n.Url = env.GetOr("NATS_URL", apibase.Conf.GetDefaultString("nats.url", "nats://localhost:4222"))

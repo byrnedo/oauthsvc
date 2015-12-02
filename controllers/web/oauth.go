@@ -20,9 +20,10 @@ func NewOauthController(server *osin.Server) *OauthController{
 
 func (oC *OauthController) GetRoutes() []*routes.WebRoute{
 	return []*routes.WebRoute{
-		routes.NewWebRoute("GetUsers", "/api/v1/authorize", routes.GET, oC.Authorize),
-		routes.NewWebRoute("GetUsers", "/api/v1/token", routes.GET, oC.Token),
-		routes.NewWebRoute("GetUsers", "/api/v1/info", routes.GET, oC.Info),
+		routes.NewWebRoute("LoginForm", "/api/v1/authorize", routes.GET, oC.Authorize),
+		routes.NewWebRoute("PostCredentials", "/api/v1/authorize", routes.POST, oC.Authorize),
+		routes.NewWebRoute("Token", "/api/v1/token", routes.GET, oC.Token),
+		routes.NewWebRoute("Info", "/api/v1/info", routes.GET, oC.Info),
 	}
 }
 
@@ -78,7 +79,7 @@ func HandleLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.R
 	w.Write([]byte("<html><body>"))
 
 	w.Write([]byte(fmt.Sprintf("LOGIN %s (use test/test)<br/>", ar.Client.GetId())))
-	w.Write([]byte(fmt.Sprintf("<form action=\"/authorize?response_type=%s&client_id=%s&state=%s&redirect_uri=%s\" method=\"POST\">",
+	w.Write([]byte(fmt.Sprintf("<form action=\"/api/v1/authorize?response_type=%s&client_id=%s&state=%s&redirect_uri=%s\" method=\"POST\">",
 		ar.Type, ar.Client.GetId(), ar.State, url.QueryEscape(ar.RedirectUri))))
 
 	w.Write([]byte("Login: <input type=\"text\" name=\"login\" /><br/>"))
