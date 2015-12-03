@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"net/url"
 	"html/template"
-	hh "github.com/byrnedo/apibase/httphelp"
+	rHelp "github.com/byrnedo/apibase/helpers/request"
+	"encoding/json"
+	"github.com/byrnedo/oauthsvc/msgspec"
 )
 
 type loginViewData struct {
@@ -85,18 +87,43 @@ func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request) {
 }
 
 func doAuth(r *http.Request) bool {
-	r.ParseForm()
 	if r.Method != "POST" {
 		return false
 	}
 	// talk to data source here.
-	if hh.AcceptsJson(r) {
-		// TODO
+	if rHelp.AcceptsJson(r) {
 	} else {
-		if r.Form.Get("login") == "test" && r.Form.Get("password") == "test" {
-			return true
-		}
 	}
+	return false
+}
+
+func doJSONAuth(r *http.Request) bool {
+	var (
+		d = json.NewDecoder(r.Body)
+		creds = &msgspec.AuthorizeRequest{}
+	)
+	if err := d.Decode(creds); err != nil {
+		Error.Println("Failed to decode json:" + err.Error())
+		return false
+	}
+
+	/*
+	NatsUserClient.Validate(...)
+	 */
+	return false
+}
+
+func doFormAuth(r *http.Request) bool {
+	r.ParseForm()
+	user := r.Form.Get("user")
+	password := r.Form.Get("password")
+
+	_ = user + password
+
+	/*
+	NatsUserClient.Validate(...)
+	 */
+
 	return false
 }
 
