@@ -1,4 +1,9 @@
 package web
+// Osin:
+// Copyright (c) 2013, Rangel Reale
+// All rights reserved.
+// modifications:
+// Copyright (c) 2015, Donal Byrne
 import (
 	"github.com/byrnedo/apibase/routes"
 	"net/http"
@@ -6,8 +11,14 @@ import (
 	"github.com/RangelReale/osin"
 	"fmt"
 	"net/url"
+	"html/template"
+	hh "github.com/byrnedo/apibase/httphelp"
 )
 
+type loginViewData struct {
+	ClientID string
+	PostURL string
+}
 
 type OauthController struct {
 	Server *osin.Server
@@ -28,7 +39,9 @@ func (oC *OauthController) GetRoutes() []*routes.WebRoute{
 }
 
 func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request) {
-	resp := oC.Server.NewResponse()
+	var (
+		resp = oC.Server.NewResponse()
+	)
 	defer resp.Close()
 
 	if ar := oC.Server.HandleAuthorizeRequest(resp, r); ar != nil {
@@ -73,28 +86,31 @@ func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request) {
 
 func doAuth(r *http.Request) bool {
 	r.ParseForm()
+	if r.Method != "POST" {
+		return false
+	}
 	// talk to data source here.
-	if r.Method == "POST" && r.Form.Get("login") == "test" && r.Form.Get("password") == "test" {
-		return true
+	if hh.AcceptsJson(r) {
+		// TODO
+	} else {
+		if r.Form.Get("login") == "test" && r.Form.Get("password") == "test" {
+			return true
+		}
 	}
 	return false
 }
 
-func RenderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) bool {
-
-	w.Write([]byte("<html><body>"))
-
-	w.Write([]byte(fmt.Sprintf("LOGIN %s (use test/test)<br/>", ar.Client.GetId())))
-	w.Write([]byte(fmt.Sprintf("<form action=\"/api/v1/authorize?response_type=%s&client_id=%s&state=%s&redirect_uri=%s\" method=\"POST\">",
-		ar.Type, ar.Client.GetId(), ar.State, url.QueryEscape(ar.RedirectUri))))
-
-	w.Write([]byte("Login: <input type=\"text\" name=\"login\" /><br/>"))
-	w.Write([]byte("Password: <input type=\"password\" name=\"password\" /><br/>"))
-	w.Write([]byte("<input type=\"submit\"/>"))
-
-	w.Write([]byte("</form>"))
-
-	w.Write([]byte("</body></html>"))
-
-	return false
+func RenderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		t *template.Template
+	)
+	if t, err = template.ParseFiles("./views/login.html"); err != nil {
+		Error.Println("Failed to parse template:" + err.Error())
+	}
+	t.Execute(w, loginViewData{
+		ClientID: ar.Client.GetId(),
+		PostURL: fmt.Sprintf("/api/v1/authorize?response_type=%s&client_id=%s&state=%s&redirect_uri=%s",
+			ar.Type, ar.Client.GetId(), ar.State, url.QueryEscape(ar.RedirectUri)),
+	})
 }

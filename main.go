@@ -30,9 +30,9 @@ func init() {
 	sstorage := mgostore.NewOAuthStorage(mongo.Conn(), "oauth_osin")
 
 	// MOVE THIS AND MAKE DYNAMIC
-	if _, err := sstorage.GetClient("1234"); err != nil {
-		sstorage.SetClient("1234", &osin.DefaultClient{
-			Id:          "1234",
+	if _, err := sstorage.GetClient("test"); err != nil {
+		sstorage.SetClient("test", &osin.DefaultClient{
+			Id:          "test",
 			Secret:      "superSecret!",
 			RedirectUri: "http://localhost:14001/appauth",
 		})
@@ -65,7 +65,7 @@ func main() {
 	)
 
 	host = apibase.Conf.GetDefaultString("http.host", "localhost")
-	if port, err = env.GetOrInt("PORT", apibase.Conf.GetDefaultInt("http.port", 9999)); err != nil {
+	if port, err = env.GetOrInt("PORT", int(apibase.Conf.GetDefaultInt("http.port", 9999))); err != nil {
 		panic(err.Error())
 	}
 
