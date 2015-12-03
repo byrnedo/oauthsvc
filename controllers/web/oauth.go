@@ -54,7 +54,7 @@ func (oC *OauthController) Token(w http.ResponseWriter, r *http.Request) {
 		oC.Server.FinishAccessRequest(resp, r, ar)
 	}
 	if resp.IsError && resp.InternalError != nil {
-		fmt.Printf("ERROR: %s\n", resp.InternalError)
+		Error.Printf("ERROR: %s\n", resp.InternalError)
 	}
 	osin.OutputJSON(resp, w, r)
 

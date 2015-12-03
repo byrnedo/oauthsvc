@@ -10,6 +10,7 @@ import (
 type OauthController struct {
 	routes []*r.NatsRoute
 	encCon *nats.EncodedConn
+	oauthServ *osin.Server
 }
 
 func (c *OauthController) GetRoutes() []*r.NatsRoute {
@@ -18,9 +19,10 @@ func (c *OauthController) GetRoutes() []*r.NatsRoute {
 	}
 }
 
-func NewOauthController(nc *nats.EncodedConn, *osin.Storage) (oC *OauthController) {
+func NewOauthController(nc *nats.EncodedConn, server *osin.Server) (oC *OauthController) {
 	oC = &OauthController{}
 	oC.encCon = nc
+	oC.oauthServ = server
 	return
 }
 

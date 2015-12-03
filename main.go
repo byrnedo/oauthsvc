@@ -51,7 +51,7 @@ func init() {
 		panic("Failed to connect to nats:" + err.Error())
 	}
 
-	routers.InitMq(natsCon)
+	routers.InitMq(natsCon, server)
 
 	routers.InitWeb(server)
 
