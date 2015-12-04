@@ -1,1 +1,1 @@
-web: oauthsvc.git -conf conf/app.conf
+web: oauthsvc -conf conf/app.conf
