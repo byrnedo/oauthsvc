@@ -1,0 +1,56 @@
+{
+	"ImportPath": "github.com/byrnedo/oauthsvc",
+	"GoVersion": "go1.5.1",
+	"Packages": [
+		"."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/RangelReale/osin",
+			"Rev": "d47a3d4a0dbb46c656730fdc39aa4faf35a61c17"
+		},
+		{
+			"ImportPath": "github.com/apcera/nats",
+			"Comment": "v1.1.2-61-g981a438",
+			"Rev": "981a4386a015671d82ac574d2e10cfe6957f4ce3"
+		},
+		{
+			"ImportPath": "github.com/byrnedo/apibase",
+			"Rev": "333dc239c5a237034378edf5594d2fc8b4f58ce9"
+		},
+		{
+			"ImportPath": "github.com/byrnedo/typesafe-config/parse",
+			"Rev": "5c3e8c1237934656ae8e20bc9e7e638214d19679"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "9c068cf16d982f8bd444b8c352acbeec34c4fe5b"
+		},
+		{
+			"ImportPath": "github.com/justinas/alice",
+			"Rev": "82db91fe6d1db4c070fed544cb5d0b5cc08fe276"
+		},
+		{
+			"ImportPath": "github.com/nats-io/nats/encoders/builtin",
+			"Comment": "v1.1.2-61-g981a438",
+			"Rev": "981a4386a015671d82ac574d2e10cfe6957f4ce3"
+		},
+		{
+			"ImportPath": "github.com/nguyenxuantuong/osin-mongo-storage",
+			"Rev": "989e72796747caabc13762b4bac49ff91fdad381"
+		},
+		{
+			"ImportPath": "github.com/pborman/uuid",
+			"Rev": "cccd189d45f7ac3368a0d127efb7f4d08ae0b655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2015.10.05-1-g4d04138",
+			"Rev": "4d04138ffef2791c479c0c8bbffc30b34081b8d9"
+		}
+	]
+}
