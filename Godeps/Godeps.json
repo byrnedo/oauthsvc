@@ -16,7 +16,7 @@
 		},
 		{
 			"ImportPath": "github.com/byrnedo/apibase",
-			"Rev": "333dc239c5a237034378edf5594d2fc8b4f58ce9"
+			"Rev": "f93d10d72062a7adee228da6d9a2b3dee0ac2a8d"
 		},
 		{
 			"ImportPath": "github.com/byrnedo/typesafe-config/parse",
