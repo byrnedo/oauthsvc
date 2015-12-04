@@ -1,0 +1,1 @@
+web: oauthsvc.git -conf conf/app.conf
