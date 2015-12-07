@@ -6,15 +6,17 @@ import (
 	"net/http"
 "github.com/byrnedo/oauthsvc/controllers/web"
 	"github.com/RangelReale/osin"
+	"github.com/byrnedo/apibase/middleware"
+	"github.com/byrnedo/apibase/natsio"
 )
 
 
-func InitWeb(server *osin.Server){
+func InitWeb(natsCon *natsio.Nats, server *osin.Server){
 	var rtr = mux.NewRouter().StrictSlash(true)
-	controllers.RegisterMuxRoutes(rtr, web.NewOauthController(server))
+	controllers.RegisterMuxRoutes(rtr, web.NewOauthController(natsCon, server))
 
 	//alice is a tiny package to chain middlewares.
-	mChain := alice.New().Then(rtr)
+	mChain := alice.New(middleware.LogTime).Then(rtr)
 
 	http.Handle("/", mChain)
 }

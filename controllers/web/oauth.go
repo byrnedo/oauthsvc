@@ -15,6 +15,9 @@ import (
 	rHelp "github.com/byrnedo/apibase/helpers/request"
 	"encoding/json"
 	"github.com/byrnedo/oauthsvc/msgspec"
+	"github.com/byrnedo/apibase/natsio"
+	"time"
+	"github.com/byrnedo/usersvc/msgspec/mq"
 )
 
 type loginViewData struct {
@@ -23,11 +26,17 @@ type loginViewData struct {
 }
 
 type OauthController struct {
+	NatsCon *natsio.Nats
+	NatsRequestTimeout time.Duration
 	Server *osin.Server
 }
 
-func NewOauthController(server *osin.Server) *OauthController{
-	return &OauthController{server}
+func NewOauthController(natsCon *natsio.Nats, server *osin.Server) *OauthController{
+	return &OauthController{
+		NatsCon:natsCon,
+		NatsRequestTimeout: 5*time.Second,
+		Server: server,
+	}
 }
 
 
@@ -97,10 +106,11 @@ func doAuth(r *http.Request) bool {
 	return false
 }
 
-func doJSONAuth(r *http.Request) bool {
+func (oC *OauthController) doJSONAuth(r *http.Request) bool {
 	var (
 		d = json.NewDecoder(r.Body)
 		creds = &msgspec.AuthorizeRequest{}
+		data *mq.AuthenticateUserRequest
 	)
 	if err := d.Decode(creds); err != nil {
 		Error.Println("Failed to decode json:" + err.Error())
@@ -110,6 +120,19 @@ func doJSONAuth(r *http.Request) bool {
 	/*
 	NatsUserClient.Validate(...)
 	 */
+
+	data = &mq.AuthenticateUserRequest{
+		User: creds.User,
+		Password : creds.Password,
+	}
+
+	response := []byte{}
+
+	if err := oC.NatsCon.Request("users.user.login",data,response,oC.NatsRequestTimeout); err != nil {
+		Error.Println("Failed to make nats request to user svc:", err.Error())
+		return false
+	}
+
 	return false
 }
 

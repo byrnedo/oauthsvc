@@ -13,6 +13,7 @@ type OauthController struct {
 	oauthServ *osin.Server
 }
 
+
 func (c *OauthController) GetRoutes() []*r.NatsRoute {
 	return []*r.NatsRoute{
 		r.NewNatsRoute("oauth.token.validate", c.Validate),

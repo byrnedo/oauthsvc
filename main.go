@@ -43,6 +43,10 @@ func init() {
 	natsOpts := natsio.NewNatsOptions(func(n *natsio.NatsOptions) error {
 		n.Url = env.GetOr("NATS_URL", apibase.Conf.GetDefaultString("nats.url", "nats://localhost:4222"))
 		n.Timeout = 10 * time.Second
+
+		if appName, err := apibase.Conf.GetString("app-name"); err == nil && len(appName) > 0 {
+			n.Name = appName
+		}
 		return nil
 	})
 
@@ -53,7 +57,7 @@ func init() {
 
 	routers.InitMq(natsCon, server)
 
-	routers.InitWeb(server)
+	routers.InitWeb(natsCon, server)
 
 }
 func main() {
