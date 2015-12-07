@@ -126,7 +126,7 @@ func (oC *OauthController) doJSONAuth(r *http.Request) bool {
 		Password : creds.Password,
 	}
 
-	response := []byte{}
+	response := mq.AuthenticateUserResponse{}
 
 	if err := oC.NatsCon.Request("users.user.login",data,response,oC.NatsRequestTimeout); err != nil {
 		Error.Println("Failed to make nats request to user svc:", err.Error())
