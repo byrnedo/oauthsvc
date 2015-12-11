@@ -12,9 +12,14 @@ import (
 	"fmt"
 	"net/url"
 	"html/template"
-	rHelp "github.com/byrnedo/apibase/helpers/request"
 	"encoding/json"
 	"github.com/byrnedo/oauthsvc/msgspec"
+	"github.com/byrnedo/apibase/natsio"
+	"time"
+	"github.com/byrnedo/usersvc/msgspec/mq"
+	"github.com/byrnedo/apibase/controllers"
+	"github.com/julienschmidt/httprouter"
+	"github.com/byrnedo/apibase/natsio/protobuf"
 )
 
 type loginViewData struct {
@@ -23,11 +28,18 @@ type loginViewData struct {
 }
 
 type OauthController struct {
+	controllers.JsonController
+	NatsCon *natsio.Nats
+	NatsRequestTimeout time.Duration
 	Server *osin.Server
 }
 
-func NewOauthController(server *osin.Server) *OauthController{
-	return &OauthController{server}
+func NewOauthController(natsCon *natsio.Nats, server *osin.Server) *OauthController{
+	return &OauthController{
+		NatsCon:natsCon,
+		NatsRequestTimeout: 5*time.Second,
+		Server: server,
+	}
 }
 
 
@@ -40,15 +52,15 @@ func (oC *OauthController) GetRoutes() []*routes.WebRoute{
 	}
 }
 
-func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request) {
+func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
 		resp = oC.Server.NewResponse()
 	)
 	defer resp.Close()
 
 	if ar := oC.Server.HandleAuthorizeRequest(resp, r); ar != nil {
-		if !doAuth(r) {
-			RenderLoginPage(ar,w,r)
+		if !oC.doAuth(r) {
+			renderLoginPage(ar,w,r)
 			return
 		}
 		ar.Authorized = true
@@ -60,7 +72,7 @@ func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request) {
 	osin.OutputJSON(resp, w, r)
 }
 
-func (oC *OauthController) Token(w http.ResponseWriter, r *http.Request) {
+func (oC *OauthController) Token(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	resp := oC.Server.NewResponse()
 	defer resp.Close()
 
@@ -75,7 +87,7 @@ func (oC *OauthController) Token(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request) {
+func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	resp := oC.Server.NewResponse()
 	defer resp.Close()
 
@@ -86,18 +98,35 @@ func (oC *OauthController) Info(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func doAuth(r *http.Request) bool {
+func (oC *OauthController) doAuth(r *http.Request) (result bool) {
 	if r.Method != "POST" {
 		return false
 	}
 	// talk to data source here.
-	if rHelp.AcceptsJson(r) {
+	if oC.AcceptsJson(r) {
+		result = oC.doJSONAuth(r)
 	} else {
+		oC.doFormAuth(r)
+		result = oC.doFormAuth(r)
 	}
-	return false
+	return
 }
 
-func doJSONAuth(r *http.Request) bool {
+func (oC *OauthController) sendAuthRequest(user string, pass string) bool {
+
+	data := mq.NewAuthenticateUserRequest(&mq.InnerAuthenticateUserRequest{Username: &user, Password: &pass})
+
+	response := mq.InnerAuthenticateUserResponse{}
+
+	if err := oC.NatsCon.Request(mq.AuthenticateUserSubject,&protobuf.NatsContext{},data, &response,oC.NatsRequestTimeout); err != nil {
+		Error.Println("Failed to make nats request to user svc:", err.Error())
+		return false
+	}
+	Info.Println("Got authenticate reseponse:", response)
+	return response.GetAuthenticated()
+}
+
+func (oC *OauthController) doJSONAuth(r *http.Request) bool {
 	var (
 		d = json.NewDecoder(r.Body)
 		creds = &msgspec.AuthorizeRequest{}
@@ -107,27 +136,20 @@ func doJSONAuth(r *http.Request) bool {
 		return false
 	}
 
-	/*
-	NatsUserClient.Validate(...)
-	 */
-	return false
+
+	return oC.sendAuthRequest(creds.User, creds.Password)
 }
 
-func doFormAuth(r *http.Request) bool {
+func (oC *OauthController) doFormAuth(r *http.Request) bool {
 	r.ParseForm()
 	user := r.Form.Get("user")
 	password := r.Form.Get("password")
 
-	_ = user + password
 
-	/*
-	NatsUserClient.Validate(...)
-	 */
-
-	return false
+	return oC.sendAuthRequest(user, password)
 }
 
-func RenderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) {
+func renderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 		t *template.Template

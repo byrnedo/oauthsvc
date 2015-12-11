@@ -8,5 +8,5 @@ import (
 
 
 func InitMq(natsCon *natsio.Nats, server *osin.Server) {
-	controllers.SubscribeNatsRoutes(natsCon, "oauth_svc_worker", mq.NewOauthController(natsCon.EncCon, server))
+	controllers.SubscribeNatsRoutes(natsCon, "oauth_svc_worker", mq.NewOauthController(natsCon, server))
 }

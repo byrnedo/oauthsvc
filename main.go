@@ -24,7 +24,10 @@ func init() {
 
 	apibase.Init()
 
-	mongo.Init(env.GetOr("MONGO_URL", apibase.Conf.GetDefaultString("mongo.url", "")), Trace)
+	mongoUrl := env.GetOr("MONGO_URL", apibase.Conf.GetDefaultString("mongo.url", ""))
+	Info.Println("Attempting to connect to [" + mongoUrl + "]")
+
+	mongo.Init(mongoUrl, Trace)
 
 	config := osin.NewServerConfig()
 	sstorage := mgostore.NewOAuthStorage(mongo.Conn(), "oauth_osin")
@@ -43,8 +46,16 @@ func init() {
 	natsOpts := natsio.NewNatsOptions(func(n *natsio.NatsOptions) error {
 		n.Url = env.GetOr("NATS_URL", apibase.Conf.GetDefaultString("nats.url", "nats://localhost:4222"))
 		n.Timeout = 10 * time.Second
+
+		Info.Println("Attempting to connect to [" + n.Url + "]")
+
+		if appName, err := apibase.Conf.GetString("app-name"); err == nil && len(appName) > 0 {
+			n.Name = appName
+		}
 		return nil
 	})
+
+	Info.Println("Nats encoding:", natsOpts.GetEncoding())
 
 	natsCon, err := natsOpts.Connect()
 	if err != nil {
@@ -53,7 +64,7 @@ func init() {
 
 	routers.InitMq(natsCon, server)
 
-	routers.InitWeb(server)
+	routers.InitWeb(natsCon, server)
 
 }
 func main() {
