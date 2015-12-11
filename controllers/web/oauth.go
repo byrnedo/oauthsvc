@@ -60,6 +60,7 @@ func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request, ps 
 
 	if ar := oC.Server.HandleAuthorizeRequest(resp, r); ar != nil {
 		if !oC.doAuth(r) {
+			Info.Println("Rendering login page")
 			renderLoginPage(ar,w,r)
 			return
 		}
@@ -106,7 +107,6 @@ func (oC *OauthController) doAuth(r *http.Request) (result bool) {
 	if oC.AcceptsJson(r) {
 		result = oC.doJSONAuth(r)
 	} else {
-		oC.doFormAuth(r)
 		result = oC.doFormAuth(r)
 	}
 	return
@@ -122,7 +122,7 @@ func (oC *OauthController) sendAuthRequest(user string, pass string) bool {
 		Error.Println("Failed to make nats request to user svc:", err.Error())
 		return false
 	}
-	Info.Println("Got authenticate reseponse:", response)
+	Info.Println("Got authenticate response:", &response)
 	return response.GetAuthenticated()
 }
 
@@ -142,10 +142,11 @@ func (oC *OauthController) doJSONAuth(r *http.Request) bool {
 
 func (oC *OauthController) doFormAuth(r *http.Request) bool {
 	r.ParseForm()
-	user := r.Form.Get("user")
+	user := r.Form.Get("login")
 	password := r.Form.Get("password")
 
 
+	Info.Print("Making auth request.")
 	return oC.sendAuthRequest(user, password)
 }
 
