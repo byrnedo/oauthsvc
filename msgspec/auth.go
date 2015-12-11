@@ -1,6 +1,6 @@
 package msgspec
 
 type AuthorizeRequest struct {
-	User string
+	User     string
 	Password string
 }

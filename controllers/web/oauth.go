@@ -1,49 +1,49 @@
 package web
+
 // Osin:
 // Copyright (c) 2013, Rangel Reale
 // All rights reserved.
 // modifications:
 // Copyright (c) 2015, Donal Byrne
 import (
-	"github.com/byrnedo/apibase/routes"
-	"net/http"
-	. "github.com/byrnedo/apibase/logger"
-	"github.com/RangelReale/osin"
-	"fmt"
-	"net/url"
-	"html/template"
 	"encoding/json"
-	"github.com/byrnedo/oauthsvc/msgspec"
-	"github.com/byrnedo/apibase/natsio"
-	"time"
-	"github.com/byrnedo/usersvc/msgspec/mq"
+	"fmt"
+	"github.com/RangelReale/osin"
 	"github.com/byrnedo/apibase/controllers"
-	"github.com/julienschmidt/httprouter"
+	. "github.com/byrnedo/apibase/logger"
+	"github.com/byrnedo/apibase/natsio"
 	"github.com/byrnedo/apibase/natsio/protobuf"
+	"github.com/byrnedo/apibase/routes"
+	"github.com/byrnedo/oauthsvc/msgspec"
+	"github.com/byrnedo/usersvc/msgspec/mq"
+	"github.com/julienschmidt/httprouter"
+	"html/template"
+	"net/http"
+	"net/url"
+	"time"
 )
 
 type loginViewData struct {
 	ClientID string
-	PostURL string
+	PostURL  string
 }
 
 type OauthController struct {
 	controllers.JsonController
-	NatsCon *natsio.Nats
+	NatsCon            *natsio.Nats
 	NatsRequestTimeout time.Duration
-	Server *osin.Server
+	Server             *osin.Server
 }
 
-func NewOauthController(natsCon *natsio.Nats, server *osin.Server) *OauthController{
+func NewOauthController(natsCon *natsio.Nats, server *osin.Server) *OauthController {
 	return &OauthController{
-		NatsCon:natsCon,
-		NatsRequestTimeout: 5*time.Second,
-		Server: server,
+		NatsCon:            natsCon,
+		NatsRequestTimeout: 5 * time.Second,
+		Server:             server,
 	}
 }
 
-
-func (oC *OauthController) GetRoutes() []*routes.WebRoute{
+func (oC *OauthController) GetRoutes() []*routes.WebRoute {
 	return []*routes.WebRoute{
 		routes.NewWebRoute("LoginForm", "/api/v1/authorize", routes.GET, oC.Authorize),
 		routes.NewWebRoute("PostCredentials", "/api/v1/authorize", routes.POST, oC.Authorize),
@@ -61,7 +61,7 @@ func (oC *OauthController) Authorize(w http.ResponseWriter, r *http.Request, ps 
 	if ar := oC.Server.HandleAuthorizeRequest(resp, r); ar != nil {
 		if !oC.doAuth(r) {
 			Info.Println("Rendering login page")
-			renderLoginPage(ar,w,r)
+			renderLoginPage(ar, w, r)
 			return
 		}
 		ar.Authorized = true
@@ -118,7 +118,7 @@ func (oC *OauthController) sendAuthRequest(user string, pass string) bool {
 
 	response := mq.InnerAuthenticateUserResponse{}
 
-	if err := oC.NatsCon.Request(mq.AuthenticateUserSubject,&protobuf.NatsContext{},data, &response,oC.NatsRequestTimeout); err != nil {
+	if err := oC.NatsCon.Request(mq.AuthenticateUserSubject, &protobuf.NatsContext{}, data, &response, oC.NatsRequestTimeout); err != nil {
 		Error.Println("Failed to make nats request to user svc:", err.Error())
 		return false
 	}
@@ -128,14 +128,13 @@ func (oC *OauthController) sendAuthRequest(user string, pass string) bool {
 
 func (oC *OauthController) doJSONAuth(r *http.Request) bool {
 	var (
-		d = json.NewDecoder(r.Body)
+		d     = json.NewDecoder(r.Body)
 		creds = &msgspec.AuthorizeRequest{}
 	)
 	if err := d.Decode(creds); err != nil {
 		Error.Println("Failed to decode json:" + err.Error())
 		return false
 	}
-
 
 	return oC.sendAuthRequest(creds.User, creds.Password)
 }
@@ -145,7 +144,6 @@ func (oC *OauthController) doFormAuth(r *http.Request) bool {
 	user := r.Form.Get("login")
 	password := r.Form.Get("password")
 
-
 	Info.Print("Making auth request.")
 	return oC.sendAuthRequest(user, password)
 }
@@ -153,7 +151,7 @@ func (oC *OauthController) doFormAuth(r *http.Request) bool {
 func renderLoginPage(ar *osin.AuthorizeRequest, w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
-		t *template.Template
+		t   *template.Template
 	)
 	if t, err = template.ParseFiles("./views/login.html"); err != nil {
 		Error.Println("Failed to parse template:" + err.Error())

@@ -1,19 +1,17 @@
 package mq
 
 import (
-	r "github.com/byrnedo/apibase/routes"
-	"github.com/nats-io/nats"
 	"github.com/RangelReale/osin"
 	"github.com/byrnedo/apibase/natsio"
+	r "github.com/byrnedo/apibase/routes"
+	"github.com/nats-io/nats"
 )
 
-
 type OauthController struct {
-	routes []*r.NatsRoute
-	natsCon *natsio.Nats
+	routes    []*r.NatsRoute
+	natsCon   *natsio.Nats
 	oauthServ *osin.Server
 }
-
 
 func (c *OauthController) GetRoutes() []*r.NatsRoute {
 	return []*r.NatsRoute{

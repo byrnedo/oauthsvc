@@ -1,12 +1,13 @@
 package routers
+
 import (
-	"github.com/byrnedo/apibase/natsio"
 	"github.com/byrnedo/apibase/controllers"
 	"github.com/byrnedo/oauthsvc/controllers/mq"
-	"github.com/RangelReale/osin"
+	"github.com/byrnedo/oauthsvc/osinserver"
+	"github.com/byrnedo/apibase/natsio/defaultnats"
 )
 
+func init() {
 
-func InitMq(natsCon *natsio.Nats, server *osin.Server) {
-	controllers.SubscribeNatsRoutes(natsCon, "oauth_svc_worker", mq.NewOauthController(natsCon, server))
+	controllers.SubscribeNatsRoutes(defaultnats.Conn, "oauth_svc_worker", mq.NewOauthController(defaultnats.Conn, osinserver.Server))
 }
