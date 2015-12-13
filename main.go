@@ -5,10 +5,10 @@ package main
 import (
 	"fmt"
 	"github.com/byrnedo/apibase/config"
-	"github.com/byrnedo/apibase/helpers/env"
 	. "github.com/byrnedo/apibase/logger"
 	_ "github.com/byrnedo/oauthsvc/routers"
 	"net/http"
+	"github.com/byrnedo/apibase/helpers/envhelp"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	)
 
 	host = config.Conf.GetDefaultString("http.host", "localhost")
-	if port, err = env.GetOrInt("PORT", int(config.Conf.GetDefaultInt("http.port", 9999))); err != nil {
+	if port, err = envhelp.GetOrInt("PORT", int(config.Conf.GetDefaultInt("http.port", 9999))); err != nil {
 		panic(err.Error())
 	}
 
